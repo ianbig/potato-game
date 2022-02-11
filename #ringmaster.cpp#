@@ -82,6 +82,8 @@ void RingMaster::setupServer(const int port_num) {
 
   freeaddrinfo(serviceinfo);
 
+  
+
   if (close(socket_fd) == -1) {
     // TODO: throw exception
     perror("close");
