@@ -1,15 +1,15 @@
 TARGETS = ringmaster player
 CC = g++
+RINGMASTER_HEADER = ringmaster.hpp connect.hpp network.hpp
+RINGMASTER_SRC = ringmaster.cpp
 CFLAG = --std=c++11 -Wall -Werror -Wextra
 
 all: $(TARGETS)
 
-ringmaster: potato ringmaster.cpp ringmaster.hpp
-	$(CC) -o $@ $(CFLAG) -g potato.o ringmaster.cpp
+ringmaster: $(RINGMASTER_SRC) $(RINGMASTER_HEADER)
+	$(CC) -o $@ $(CFLAG) -g ringmaster.cpp
 player: potato player.cpp player.hpp
-	$(CC) -o $@ $(CFLAG) $<
-potato: potato.cpp potato.hpp
-	$(CC) $< $(CFLAG) -c
+	$(CC) -o $@ $(CFLAG) -g player.cpp
 
 .PHONY: clean
 clean:

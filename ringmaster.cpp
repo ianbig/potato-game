@@ -8,6 +8,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "network.hpp"
+
 #define RINGMASTER_COMMAND_LENGTH 4
 
 std::unordered_map<const char *, int> parseOpt(int argc,
@@ -15,7 +17,7 @@ std::unordered_map<const char *, int> parseOpt(int argc,
                                                std::vector<std::string> opts) {
   if (argc != RINGMASTER_COMMAND_LENGTH) {
     // TODO: refactor this to throw exception
-    fprintf(stderr, "Error: ringmaster <port_num> <num_players> <num_hops>\n");
+    std::cerr << "Error: ringmaster <port_num> <num_players> <num_hops>" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -41,31 +43,12 @@ std::unordered_map<const char *, int> parseOpt(int argc,
 }
 
 void RingMaster::setupServer(const int port_num) {
-  struct addrinfo hints;
-  struct addrinfo * serviceinfo;
+  Network * connect = new Network();
+  std::pair<int, struct addrinfo *> socketInfo =
+      connect->connectSetup<int, struct addrinfo *>(port_num);
 
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AI_PASSIVE;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_family = AF_UNSPEC;
-
-  int status = 0;
-  if ((status = getaddrinfo(
-           NULL, std::to_string(port_num).c_str(), &hints, &serviceinfo)) != 0) {
-    // TODO: throw exception
-    fprintf(stderr, "Error: getaddrinfo error\n");
-    exit(EXIT_FAILURE);
-  }
-
-  // TODO: refactor to loop through linked list
-  int socket_fd = -1;
-  if ((socket_fd = socket(
-           serviceinfo->ai_family, serviceinfo->ai_socktype, serviceinfo->ai_protocol)) ==
-      -1) {
-    // TODO: throw exception
-    perror("socket error");
-    exit(EXIT_FAILURE);
-  }
+  int socket_fd = socketInfo.first;
+  struct addrinfo * serviceinfo = socketInfo.second;
 
   if (bind(socket_fd, serviceinfo->ai_addr, serviceinfo->ai_addrlen) == -1) {
     // TODO: throw exception

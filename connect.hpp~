@@ -1,0 +1,8 @@
+#ifndef CONNECT_H
+#define CONNECT_H
+
+class Connect {
+  virtual void connectSetup() = 0;
+};
+
+#endif
