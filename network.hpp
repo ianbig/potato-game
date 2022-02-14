@@ -1,25 +1,31 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include <unistd.h>
+
+#include <cstdlib>
+#include <cstring>
 #include <utility>
 
 #include "connect.hpp"
 
 class Network {
+  int socket_fd;
+  struct addrinfo * serviceinfo;
+
  public:
   template<typename T, typename U>
-  std::pair<T, U> connectSetup(int port_num) {
+  std::pair<T, U> connectSetup(const char * hostname, int port_num) {
     struct addrinfo hints;
-    struct addrinfo * serviceinfo;
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AI_PASSIVE;
-    hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
 
     int status = 0;
     if ((status = getaddrinfo(
-             NULL, std::to_string(port_num).c_str(), &hints, &serviceinfo)) != 0) {
+             hostname, std::to_string(port_num).c_str(), &hints, &serviceinfo)) != 0) {
       // TODO: throw exception
       fprintf(stderr, "Error: getaddrinfo error\n");
       exit(EXIT_FAILURE);
@@ -37,6 +43,16 @@ class Network {
 
     std::pair<T, U> connectInfo(socket_fd, serviceinfo);
     return connectInfo;
+  }
+
+  ~Network() {
+    freeaddrinfo(serviceinfo);
+
+    if (close(socket_fd) == -1) {
+      // TODO: throw exception
+      perror("close");
+      exit(EXIT_FAILURE);
+    }
   }
 };
 
