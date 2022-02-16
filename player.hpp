@@ -19,6 +19,7 @@ class Player {
  public:
   Player();
   ~Player();
+  // TODO: finish rule of five
   void startConnection(std::string hostname, std::string port);
 };
 

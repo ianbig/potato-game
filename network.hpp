@@ -16,8 +16,11 @@ class Network {
   int socket_fd;
   struct addrinfo * serviceinfo;
 
-  void connectSetup(const char * hostname, int port_num);
+  // TODO: finish rule of five
   ~Network();
+  void connectSetup(const char * hostname, int port_num);
+  static void sendRequest(int connectSocket, void * msg, size_t msg_len);
+  static void recvResponse(int recvSocket, void * buffer, size_t buffer_len);
 };
 
 #endif

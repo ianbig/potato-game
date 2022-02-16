@@ -105,12 +105,10 @@ void RingMaster::startGame(size_t num_players) {
     ConnectionInfo info;
     acceptRequest(&info);
     printConnectionInfo(info);
+
     serverResponse resp;
     packResponseMsg(resp);
-    if (send(info.connectionSocketfd, &resp, sizeof(resp), 0) == -1) {
-      perror("send");
-      throw std::exception();
-    }
+    Network::sendRequest(info.connectionSocketfd, &resp, sizeof(resp));
 
     players.push_back(playerId);
   }

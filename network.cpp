@@ -26,6 +26,35 @@ void Network::connectSetup(const char * hostname, int port_num) {
   }
 }
 
+/** 
+ * API for sending message
+ * @param recvSocket: socket fd
+ * @param buffer: memory space for receiving data
+ * @param buffer_len: memory space size for receiving data
+ * @throw: std::exception is recv failed
+ **/
+void Network::sendRequest(int connectSocket, void * msg, size_t msg_len) {
+  if (send(connectSocket, msg, msg_len, 0) == -1) {
+    perror("send");
+    throw std::exception();
+  }
+}
+
+/** 
+ * API for receive message
+ * @param recvSocket: socket fd
+ * @param buffer: memory space for receiving data
+ * @param buffer_len: memory space size for receiving data
+ * @throw: std::exception is recv failed
+ **/
+void Network::recvResponse(int recvSocket, void * buffer, size_t buffer_len) {
+  ssize_t numbytes = 0;
+  if ((numbytes = recv(recvSocket, buffer, buffer_len, 0)) == -1) {
+    perror("recv");
+    throw std::exception();
+  }
+}
+
 Network::~Network() {
   freeaddrinfo(serviceinfo);
 

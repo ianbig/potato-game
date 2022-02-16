@@ -40,18 +40,10 @@ void Player::startConnection(std::string hostname, std::string port) {
   }
 
   char msg[1024] = "Hi server";
-  if (send(client_connect->socket_fd, &msg, sizeof(msg), 0) == -1) {
-    perror("send");
-    throw std::exception();
-  }
+  Network::sendRequest(client_connect->socket_fd, msg, sizeof(msg));
 
   char buf[MAX_RECV_DATA] = {0};
-  ssize_t numbytes = 0;
-  if ((numbytes = recv(client_connect->socket_fd, buf, MAX_RECV_DATA, 0)) == -1) {
-    perror("recv");
-    throw std::exception();
-  }
-  buf[numbytes] = '\0';
+  Network::recvResponse(client_connect->socket_fd, buf, sizeof(buf));
 
   //TODO: write client unpack function to unpack server msg
 

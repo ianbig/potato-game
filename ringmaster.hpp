@@ -36,6 +36,7 @@ class RingMaster {
   void packResponseMsg(serverResponse & resp);
 
  public:
+  // TODO: finish rule of five
   RingMaster();
   ~RingMaster();
   void setupServer(int port_num);
