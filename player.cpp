@@ -30,28 +30,30 @@ Player::Player() : client_connect(new Network()) {
 }
 
 void Player::startConnection(std::string hostname, std::string port) {
-  std::pair<int, struct addrinfo *> socketInfo =
-      client_connect->connectSetup<int, struct addrinfo *>(hostname.c_str(),
-                                                           std::stoi(port));
-  int socketfd = socketInfo.first;
-  struct addrinfo * sockInfo = socketInfo.second;
+  client_connect->connectSetup(hostname.c_str(), std::stoi(port));
 
-  if (connect(socketfd, sockInfo->ai_addr, sockInfo->ai_addrlen) == -1) {
+  if (connect(client_connect->socket_fd,
+              client_connect->serviceinfo->ai_addr,
+              client_connect->serviceinfo->ai_addrlen) == -1) {
     perror("connect");
     throw std::exception();
   }
 
-  char msg[] = "hello from client";
-  if (send(socketfd, msg, strlen(msg) + 1, 0) == -1) {
+  char msg[1024] = "Hi server";
+  if (send(client_connect->socket_fd, &msg, sizeof(msg), 0) == -1) {
     perror("send");
     throw std::exception();
   }
 
   char buf[MAX_RECV_DATA] = {0};
-  if (recv(socketfd, buf, MAX_RECV_DATA, 0) == -1) {
+  ssize_t numbytes = 0;
+  if ((numbytes = recv(client_connect->socket_fd, buf, MAX_RECV_DATA, 0)) == -1) {
     perror("recv");
     throw std::exception();
   }
+  buf[numbytes] = '\0';
+
+  //TODO: write client unpack function to unpack server msg
 
   std::cout << "get from server: " << buf << std::endl;
 }

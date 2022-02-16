@@ -8,9 +8,11 @@
 #include <string>
 #include <vector>
 #define MAX_RECV_DATA 1024
+#define MAX_SEND_DATA 1024
 #include "network.hpp"
+
 class Player {
-  size_t player_id;
+  size_t id;
   std::vector<int> socket_fds;
   Network * client_connect;
 

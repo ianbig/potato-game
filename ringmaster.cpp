@@ -55,28 +55,25 @@ std::unordered_map<std::string, int> parseOpt(int argc,
 }
 
 void RingMaster::setupServer(const int port_num) {
-  Network connectInfo;
-  std::pair<int, struct addrinfo *> socketInfo =
-      connectInfo.connectSetup<int, struct addrinfo *>(NULL, port_num);
+  connectInfo->connectSetup(NULL, port_num);
 
-  this->socket_fd = socketInfo.first;
-  this->serviceinfo = socketInfo.second;
-
-  if (bind(this->socket_fd, this->serviceinfo->ai_addr, this->serviceinfo->ai_addrlen) ==
-      -1) {
+  if (bind(connectInfo->socket_fd,
+           connectInfo->serviceinfo->ai_addr,
+           connectInfo->serviceinfo->ai_addrlen) == -1) {
     // TODO: throw exception
     perror("bind");
     exit(EXIT_FAILURE);
   }
 
   int yes = 1;
-  if (setsockopt(this->socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+  if (setsockopt(connectInfo->socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) ==
+      -1) {
     // TODO: throw exception
     perror("setsockopt");
     exit(EXIT_FAILURE);
   }
 
-  if (listen(this->socket_fd, BACKLOG) == -1) {
+  if (listen(connectInfo->socket_fd, BACKLOG) == -1) {
     perror("listen");
     throw std::exception();
   }
@@ -84,7 +81,7 @@ void RingMaster::setupServer(const int port_num) {
 
 void RingMaster::acceptRequest(ConnectionInfo * resp) {
   socklen_t client_addr_size = sizeof(resp->client_addr);
-  if ((resp->connectionSocketfd = accept(this->socket_fd,
+  if ((resp->connectionSocketfd = accept(connectInfo->socket_fd,
                                          (struct sockaddr *)&(resp->client_addr),
                                          &client_addr_size)) == -1) {
     perror("accept");
@@ -98,7 +95,9 @@ void RingMaster::printConnectionInfo(ConnectionInfo info) {
             get_in_addr((struct sockaddr *)&info.client_addr),
             s,
             sizeof(s));
-  std::cout << "server: got connection from " << s << std::endl;
+  std::cout << "server: got connection from " << s << " with id " << playerId
+            << std::endl;
+  playerId += 1;
 }
 
 void RingMaster::startGame(size_t num_players) {
@@ -106,26 +105,36 @@ void RingMaster::startGame(size_t num_players) {
     ConnectionInfo info;
     acceptRequest(&info);
     printConnectionInfo(info);
-    char msg[] = "greeting from server";
-    if (send(info.connectionSocketfd, msg, strlen(msg) + 1, 0) == -1) {
+    serverResponse resp;
+    packResponseMsg(resp);
+    if (send(info.connectionSocketfd, &resp, sizeof(resp), 0) == -1) {
       perror("send");
       throw std::exception();
     }
+
+    players.push_back(playerId);
   }
   assert(players.size() == num_players);
 }
 
-void RingMaster::shutDownGame() {
-  freeaddrinfo(serviceinfo);
+void RingMaster::packResponseMsg(serverResponse & resp) {
+  resp.id = playerId;
+}
+/*
+int RingMaster::unpackData(ConnectionInfo & info) {
+  return 0;
+}
+*/
 
-  if (close(socket_fd) == -1) {
-    // TODO: throw exception
-    perror("close");
-    exit(EXIT_FAILURE);
-  }
+void RingMaster::shutDownGame() {
+  // close all the socket with client
 }
 
 RingMaster::~RingMaster() {
+  delete connectInfo;
+}
+
+RingMaster::RingMaster() : connectInfo(new Network()) {
 }
 
 int main(int argc, char ** argv) {
