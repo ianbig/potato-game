@@ -21,6 +21,8 @@ class Player {
   ~Player();
   // TODO: finish rule of five
   void startConnection(std::string hostname, std::string port);
+  void unpackMsg(void * recvBuf, size_t recvSize);
+  void packPlayerConnectionRequest();
 };
 
 #endif

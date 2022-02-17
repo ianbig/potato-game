@@ -100,19 +100,32 @@ void RingMaster::printConnectionInfo(ConnectionInfo info) {
   playerId += 1;
 }
 
+/** 
+ * the function would set up the game (i.e. building the ring)
+ * @ param num_players: players in the game
+ **/
 void RingMaster::startGame(size_t num_players) {
   while (players.size() < num_players) {
     ConnectionInfo info;
     acceptRequest(&info);
     printConnectionInfo(info);
-
-    serverResponse resp;
-    packResponseMsg(resp);
-    Network::sendRequest(info.connectionSocketfd, &resp, sizeof(resp));
-
     players.push_back(playerId);
   }
   assert(players.size() == num_players);
+
+  // build the ring
+  // buildRing();
+}
+
+/**
+ * bulding up the ring in ringmaster process
+ * @implementation: send neighbor info to player process to create concept
+ * of ring
+ **/
+void RingMaster::buildRing() {
+  serverResponse resp;
+  packResponseMsg(resp);
+  Network::sendRequest(info.connectionSocketfd, &resp, sizeof(resp));
 }
 
 void RingMaster::packResponseMsg(serverResponse & resp) {

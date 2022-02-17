@@ -39,15 +39,12 @@ void Player::startConnection(std::string hostname, std::string port) {
     throw std::exception();
   }
 
-  char msg[1024] = "Hi server";
-  Network::sendRequest(client_connect->socket_fd, msg, sizeof(msg));
-
+  // send IP to ringmaster
   char buf[MAX_RECV_DATA] = {0};
   Network::recvResponse(client_connect->socket_fd, buf, sizeof(buf));
+  //TODO: write client unpack function to unpack server msg (get neighbor ip)
 
-  //TODO: write client unpack function to unpack server msg
-
-  std::cout << "get from server: " << buf << std::endl;
+  // build connection with neighbor
 }
 
 Player::~Player() {

@@ -43,7 +43,7 @@ void Network::sendRequest(int connectSocket, void * msg, size_t msg_len) {
 /** 
  * API for receive message
  * @param recvSocket: socket fd
- * @param buffer: memory space for receiving data
+ * @param buffer: valid memory space for receiving data (Note: allocate the memeory before passing in the function)
  * @param buffer_len: memory space size for receiving data
  * @throw: std::exception is recv failed
  **/

@@ -11,6 +11,15 @@
 #include <string>
 #include <utility>
 
+/**
+ * record connection information in a socket connection
+ */
+struct ConnectInfo {
+  std::string name;
+  std::string host;
+  int socketfd;
+};
+
 class Network {
  public:
   int socket_fd;
