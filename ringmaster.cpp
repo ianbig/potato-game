@@ -71,22 +71,30 @@ void RingMaster::setupServer(const int port_num) {
   }
 }
 
-void RingMaster::acceptRequest(ConnectionInfo * resp) {
-  socklen_t client_addr_size = sizeof(resp->client_addr);
-  if ((resp->connectionSocketfd = accept(connectInfo->socket_fd,
-                                         (struct sockaddr *)&(resp->client_addr),
-                                         &client_addr_size)) == -1) {
+/** 
+ * Accept reuqest in listen port queue, store the new socetid, and playerid
+ * in the provding structure
+ * @params resp: strucutre to store new connection information
+ **/
+void RingMaster::acceptRequest(playerInfo * resp) {
+  socklen_t client_addr_size = sizeof(resp->playerConnectInfo.client_addr);
+  if ((resp->playerConnectInfo.connectionSocketfd =
+           accept(connectInfo->socket_fd,
+                  (struct sockaddr *)&(resp->playerConnectInfo.client_addr),
+                  &client_addr_size)) == -1) {
     perror("accept");
     throw std::exception();
   }
+
+  resp->id = playerId++;
 }
 
 /**
  * Print out Connectiontion information according to struct ConnectionInfo
  * @param info: connection information to printout
  **/
-void RingMaster::printConnectionInfo(ConnectionInfo info) {
-  std::string s = Network::getConnectionIp(info);
+void RingMaster::printConnectionInfo(playerInfo & info) {
+  std::string s = Network::getConnectionIp(info.playerConnectInfo);
   std::cout << "server: got connection from " << s << " with id " << playerId
             << std::endl;
 }
@@ -97,15 +105,11 @@ void RingMaster::printConnectionInfo(ConnectionInfo info) {
  **/
 void RingMaster::startGame(size_t num_players) {
   while (players.size() < num_players) {
-    ConnectionInfo info;
+    playerInfo info;
     acceptRequest(&info);
     printConnectionInfo(info);
-    players.push_back(playerId);
+    players.push_back(info);
   }
-  assert(players.size() == num_players);
-
-  // build the ring
-  // buildRing();
 }
 
 /**
@@ -116,9 +120,6 @@ void RingMaster::startGame(size_t num_players) {
 void RingMaster::buildPlayerRing() {
 }
 
-void RingMaster::packResponseMsg(serverResponse & resp) {
-  resp.id = playerId;
-}
 /*
 int RingMaster::unpackData(ConnectionInfo & info) {
   return 0;

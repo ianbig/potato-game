@@ -11,24 +11,24 @@
 #include "player.hpp"
 #include "potato.hpp"
 
-struct serverResponse {
+#define BACKLOG 10
+
+struct playerInfo {
   int id;
+  ConnectionInfo playerConnectInfo;
 };
 
-typedef struct serverResponse serverResponse;
+typedef struct playerInfo playerInfo;
 
-#define BACKLOG 10
 class RingMaster {
   Potato potato;
-  std::vector<int> players;
+  std::vector<playerInfo> players;
   Network * connectInfo;
 
   static int playerId;
 
-  int unpackData(ConnectionInfo & info);
-  void packResponseMsg(serverResponse & resp);
-  void acceptRequest(ConnectionInfo * resp);
-  void printConnectionInfo(ConnectionInfo info);
+  void acceptRequest(playerInfo * resp);
+  void printConnectionInfo(playerInfo & info);
   void buildPlayerRing();
 
  public:

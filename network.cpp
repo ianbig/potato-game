@@ -86,8 +86,7 @@ void * Network::get_in_addr(struct sockaddr * sa) {
 Network::Network() : socket_fd(-1), serviceinfo(nullptr) {
 }
 
-std::pair<std::string, size_t> Network::getIpPort() {
-  struct sockaddr * addr = serviceinfo->ai_addr;
+std::pair<std::string, size_t> Network::getIpPort(struct sockaddr * addr) {
   socklen_t len = sizeof(addr);
   getsockname(socket_fd, addr, &len);
   // get IP

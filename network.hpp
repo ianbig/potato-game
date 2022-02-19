@@ -17,7 +17,6 @@
 struct ConnectionInfo {
   int connectionSocketfd;
   struct sockaddr_storage client_addr;
-  char recvmsg[1024];
 };
 
 typedef struct ConnectionInfo ConnectionInfo;
@@ -33,7 +32,7 @@ class Network {
   Network();
   ~Network();
   void connectSetup(const char * hostname, int port_num);
-  std::pair<std::string, size_t> getIpPort();
+  std::pair<std::string, size_t> getIpPort(struct sockaddr * serviceinfo);
   static void sendRequest(int connectSocket, void * msg, size_t msg_len);
   static void recvResponse(int recvSocket, void * buffer, size_t buffer_len);
   static std::string getConnectionIp(ConnectionInfo & info);

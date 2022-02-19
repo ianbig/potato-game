@@ -68,7 +68,8 @@ void Player::setupListenPort() {
     throw std::exception();
   }
 
-  std::pair<std::string, size_t> ip_port = client_connect[LISTEN_TUNNEL].getIpPort();
+  std::pair<std::string, size_t> ip_port = client_connect[LISTEN_TUNNEL].getIpPort(
+      client_connect[LISTEN_TUNNEL].serviceinfo->ai_addr);
 
   std::cout << "player's ip " << ip_port.first << std::endl;
   std::cout << "player's port " << ip_port.second << std::endl;
