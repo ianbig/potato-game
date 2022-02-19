@@ -94,9 +94,9 @@ void RingMaster::acceptRequest(playerInfo * resp) {
  * @param info: connection information to printout
  **/
 void RingMaster::printConnectionInfo(playerInfo & info) {
-  std::string s = Network::getConnectionIp(info.playerConnectInfo);
-  std::cout << "server: got connection from " << s << " with id " << playerId
-            << std::endl;
+  PortIP portIPInfo = Network::getConnectionIp(info.playerConnectInfo);
+  std::cout << "server: got connection from " << portIPInfo.first << " with player id "
+            << info.id << std::endl;
 }
 
 /** 
@@ -107,8 +107,11 @@ void RingMaster::startGame(size_t num_players) {
   while (players.size() < num_players) {
     playerInfo info;
     acceptRequest(&info);
-    printConnectionInfo(info);
     players.push_back(info);
+  }
+
+  for (auto player : players) {
+    printConnectionInfo(player);
   }
 }
 

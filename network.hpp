@@ -20,6 +20,7 @@ struct ConnectionInfo {
 };
 
 typedef struct ConnectionInfo ConnectionInfo;
+typedef std::pair<std::string, size_t> PortIP;
 
 class Network {
  public:
@@ -35,7 +36,7 @@ class Network {
   std::pair<std::string, size_t> getIpPort(struct sockaddr * serviceinfo);
   static void sendRequest(int connectSocket, void * msg, size_t msg_len);
   static void recvResponse(int recvSocket, void * buffer, size_t buffer_len);
-  static std::string getConnectionIp(ConnectionInfo & info);
+  static PortIP getConnectionIp(ConnectionInfo & info);
 };
 
 #endif

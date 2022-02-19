@@ -66,13 +66,18 @@ Network::~Network() {
   }
 }
 
-std::string Network::getConnectionIp(ConnectionInfo & info) {
-  char s[INET_ADDRSTRLEN];
+/**
+ * interface for non-network object for getting ip and port
+ **/
+PortIP Network::getConnectionIp(ConnectionInfo & info) {
+  char IP[INET_ADDRSTRLEN];
   inet_ntop(info.client_addr.ss_family,
             get_in_addr((struct sockaddr *)&info.client_addr),
-            s,
-            sizeof(s));
-  return std::string(s);
+            IP,
+            sizeof(IP));
+  size_t port = ntohs(((struct sockaddr_in *)&info.client_addr)->sin_port);
+
+  return PortIP(IP, port);
 }
 
 void * Network::get_in_addr(struct sockaddr * sa) {
@@ -86,6 +91,9 @@ void * Network::get_in_addr(struct sockaddr * sa) {
 Network::Network() : socket_fd(-1), serviceinfo(nullptr) {
 }
 
+/**
+ * provide interface for get ip and port for network object
+ **/
 std::pair<std::string, size_t> Network::getIpPort(struct sockaddr * addr) {
   socklen_t len = sizeof(addr);
   getsockname(socket_fd, addr, &len);
