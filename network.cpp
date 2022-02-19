@@ -1,5 +1,6 @@
 #include "network.hpp"
 
+#include <arpa/inet.h>
 void Network::connectSetup(const char * hostname, int port_num) {
   struct addrinfo hints;
 
@@ -63,4 +64,37 @@ Network::~Network() {
     perror("close");
     exit(EXIT_FAILURE);
   }
+}
+
+std::string Network::getConnectionIp(ConnectionInfo & info) {
+  char s[INET_ADDRSTRLEN];
+  inet_ntop(info.client_addr.ss_family,
+            get_in_addr((struct sockaddr *)&info.client_addr),
+            s,
+            sizeof(s));
+  return std::string(s);
+}
+
+void * Network::get_in_addr(struct sockaddr * sa) {
+  if (sa->sa_family == AF_INET) {
+    return &(((struct sockaddr_in *)sa)->sin_addr);
+  }
+
+  return &(((struct sockaddr_in6 *)sa)->sin6_addr);
+}
+
+Network::Network() : socket_fd(-1), serviceinfo(nullptr) {
+}
+
+std::pair<std::string, size_t> Network::getIpPort() {
+  struct sockaddr * addr = serviceinfo->ai_addr;
+  socklen_t len = sizeof(addr);
+  getsockname(socket_fd, addr, &len);
+  // get IP
+  char IP[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, &(((struct sockaddr_in *)addr)->sin_addr), IP, sizeof(IP));
+  // get port
+  size_t port = ntohs(((struct sockaddr_in *)addr)->sin_port);
+
+  return std::pair<std::string, size_t>(IP, port);
 }

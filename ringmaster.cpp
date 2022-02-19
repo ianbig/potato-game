@@ -16,14 +16,6 @@
 
 #define RINGMASTER_COMMAND_LENGTH 4
 
-void * get_in_addr(struct sockaddr * sa) {
-  if (sa->sa_family == AF_INET) {
-    return &(((struct sockaddr_in *)sa)->sin_addr);
-  }
-
-  return &(((struct sockaddr_in6 *)sa)->sin6_addr);
-}
-
 std::unordered_map<std::string, int> parseOpt(int argc,
                                               char ** argv,
                                               std::vector<std::string> opts) {
@@ -57,19 +49,19 @@ std::unordered_map<std::string, int> parseOpt(int argc,
 void RingMaster::setupServer(const int port_num) {
   connectInfo->connectSetup(NULL, port_num);
 
-  if (bind(connectInfo->socket_fd,
-           connectInfo->serviceinfo->ai_addr,
-           connectInfo->serviceinfo->ai_addrlen) == -1) {
-    // TODO: throw exception
-    perror("bind");
-    exit(EXIT_FAILURE);
-  }
-
   int yes = 1;
   if (setsockopt(connectInfo->socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) ==
       -1) {
     // TODO: throw exception
     perror("setsockopt");
+    exit(EXIT_FAILURE);
+  }
+
+  if (bind(connectInfo->socket_fd,
+           connectInfo->serviceinfo->ai_addr,
+           connectInfo->serviceinfo->ai_addrlen) == -1) {
+    // TODO: throw exception
+    perror("bind");
     exit(EXIT_FAILURE);
   }
 
@@ -89,15 +81,14 @@ void RingMaster::acceptRequest(ConnectionInfo * resp) {
   }
 }
 
+/**
+ * Print out Connectiontion information according to struct ConnectionInfo
+ * @param info: connection information to printout
+ **/
 void RingMaster::printConnectionInfo(ConnectionInfo info) {
-  char s[INET_ADDRSTRLEN];
-  inet_ntop(info.client_addr.ss_family,
-            get_in_addr((struct sockaddr *)&info.client_addr),
-            s,
-            sizeof(s));
+  std::string s = Network::getConnectionIp(info);
   std::cout << "server: got connection from " << s << " with id " << playerId
             << std::endl;
-  playerId += 1;
 }
 
 /** 
@@ -122,10 +113,7 @@ void RingMaster::startGame(size_t num_players) {
  * @implementation: send neighbor info to player process to create concept
  * of ring
  **/
-void RingMaster::buildRing() {
-  serverResponse resp;
-  packResponseMsg(resp);
-  Network::sendRequest(info.connectionSocketfd, &resp, sizeof(resp));
+void RingMaster::buildPlayerRing() {
 }
 
 void RingMaster::packResponseMsg(serverResponse & resp) {

@@ -1,0 +1,27 @@
+-*- mode: compilation; default-directory: "~/ECE650/potate/" -*-
+Compilation started at Fri Feb 18 17:33:19
+
+make -k 
+g++ -o ringmaster -pedantic --std=c++11 -Wall -Werror -Wextra -g ringmaster.cpp network.cpp
+network.cpp:89:32: error: no declaration matches ‘std::pair<std::__cxx11::basic_string<char>, long unsigned int> Network::getIPPort()’
+   89 | std::pair<std::string, size_t> Network::getIPPort() {
+      |                                ^~~~~~~
+network.cpp:89:32: note: no functions named ‘std::pair<std::__cxx11::basic_string<char>, long unsigned int> Network::getIPPort()’
+In file included from network.cpp:1:
+network.hpp:25:7: note: ‘class Network’ defined here
+   25 | class Network {
+      |       ^~~~~~~
+make: *** [Makefile:13: ringmaster] Error 1
+g++ -o player -pedantic --std=c++11 -Wall -Werror -Wextra -g player.cpp network.cpp
+network.cpp:89:32: error: no declaration matches ‘std::pair<std::__cxx11::basic_string<char>, long unsigned int> Network::getIPPort()’
+   89 | std::pair<std::string, size_t> Network::getIPPort() {
+      |                                ^~~~~~~
+network.cpp:89:32: note: no functions named ‘std::pair<std::__cxx11::basic_string<char>, long unsigned int> Network::getIPPort()’
+In file included from network.cpp:1:
+network.hpp:25:7: note: ‘class Network’ defined here
+   25 | class Network {
+      |       ^~~~~~~
+make: *** [Makefile:15: player] Error 1
+make: Target 'all' not remade because of errors.
+
+Compilation exited abnormally with code 2 at Fri Feb 18 17:33:21

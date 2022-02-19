@@ -11,17 +11,10 @@
 #include "player.hpp"
 #include "potato.hpp"
 
-struct ConnectionInfo {
-  int connectionSocketfd;
-  struct sockaddr_storage client_addr;
-  char recvmsg[1024];
-};
-
 struct serverResponse {
   int id;
 };
 
-typedef struct ConnectionInfo ConnectionInfo;
 typedef struct serverResponse serverResponse;
 
 #define BACKLOG 10
@@ -34,6 +27,9 @@ class RingMaster {
 
   int unpackData(ConnectionInfo & info);
   void packResponseMsg(serverResponse & resp);
+  void acceptRequest(ConnectionInfo * resp);
+  void printConnectionInfo(ConnectionInfo info);
+  void buildPlayerRing();
 
  public:
   // TODO: finish rule of five
@@ -42,8 +38,6 @@ class RingMaster {
   void setupServer(int port_num);
   void startGame(size_t num_players);
   void shutDownGame();
-  void acceptRequest(ConnectionInfo * resp);
-  void printConnectionInfo(ConnectionInfo info);
 };
 
 int RingMaster::playerId = 0;
