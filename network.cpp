@@ -93,6 +93,7 @@ Network::Network() : socket_fd(-1), serviceinfo(nullptr) {
 
 /**
  * provide interface for get ip and port for network object
+ * for port, it would atomatically assgin port by os
  **/
 std::pair<std::string, size_t> Network::getIpPort(struct sockaddr * addr) {
   socklen_t len = sizeof(addr);

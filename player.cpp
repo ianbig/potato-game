@@ -26,8 +26,7 @@ std::unordered_map<std::string, std::string> getOpt(int argc,
   return parsedOpt;
 }
 
-Player::Player() :
-    id(-1), tunnelCount(2), client_connect(new Network[tunnelCount]), clientIndex(0) {
+Player::Player() : tunnelCount(3), client_connect(new Network[tunnelCount]) {
 }
 
 void Player::startConnection(std::string hostname, std::string port) {
@@ -36,6 +35,35 @@ void Player::startConnection(std::string hostname, std::string port) {
   if (connect(client_connect[RINGMASTER_TUNNEL].socket_fd,
               client_connect[RINGMASTER_TUNNEL].serviceinfo->ai_addr,
               client_connect[RINGMASTER_TUNNEL].serviceinfo->ai_addrlen) == -1) {
+    perror("connect");
+    throw std::exception();
+  }
+
+  // pack connection info for ringmaster to assign neighbor
+  PortIP ip_port = client_connect[LISTEN_TUNNEL].getIpPort(
+      client_connect[LISTEN_TUNNEL].serviceinfo->ai_addr);
+
+  playerRequest request;
+  memset(&request, 0, sizeof(request));
+  request.port = ip_port.second;
+
+  std::cout << "player send out port: " << request.port << std::endl;
+  Network::sendRequest(
+      client_connect[RINGMASTER_TUNNEL].socket_fd, &request, sizeof(request));
+
+  masterToPlayerInfo neighborInfo;
+  memset(&neighborInfo, 0, sizeof(neighborInfo));
+  Network::recvResponse(
+      client_connect[RINGMASTER_TUNNEL].socket_fd, &neighborInfo, sizeof(neighborInfo));
+  setupConnectionToNeighbor(neighborInfo);
+}
+
+void Player::setupConnectionToNeighbor(masterToPlayerInfo & neighborInfo) {
+  client_connect[CONNECT_TUNNEL].connectSetup(neighborInfo.ip, neighborInfo.port);
+
+  if (connect(client_connect[CONNECT_TUNNEL].socket_fd,
+              client_connect[CONNECT_TUNNEL].serviceinfo->ai_addr,
+              client_connect[CONNECT_TUNNEL].serviceinfo->ai_addrlen) == -1) {
     perror("connect");
     throw std::exception();
   }
@@ -67,12 +95,6 @@ void Player::setupListenPort() {
     perror("listen");
     throw std::exception();
   }
-
-  std::pair<std::string, size_t> ip_port = client_connect[LISTEN_TUNNEL].getIpPort(
-      client_connect[LISTEN_TUNNEL].serviceinfo->ai_addr);
-
-  std::cout << "player's ip " << ip_port.first << std::endl;
-  std::cout << "player's port " << ip_port.second << std::endl;
 }
 
 Player::~Player() {

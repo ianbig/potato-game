@@ -13,22 +13,25 @@
 
 #define RINGMASTER_TUNNEL 0
 #define LISTEN_TUNNEL 1
-#define RIGH_TUNNEL 2
-#define LEFT_TUNNEL 3
+#define CONNECT_TUNNEL 2
 #define BACKLOG 10
 
+struct playerRequest {
+  size_t port;
+};
+
+typedef struct playerRequest playerRequest;
+
 class Player {
-  size_t id;
   size_t tunnelCount;
   Network * client_connect;
-  size_t clientIndex;
+  void setupConnectionToNeighbor(masterToPlayerInfo & neighborInfo);
 
  public:
   Player();
   ~Player();
   // TODO: finish rule of five
   void startConnection(std::string hostname, std::string port);
-  void unpackMsg(void * recvBuf, size_t recvSize);
   void setupListenPort();
 };
 

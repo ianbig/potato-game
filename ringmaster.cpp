@@ -110,9 +110,7 @@ void RingMaster::startGame(size_t num_players) {
     players.push_back(info);
   }
 
-  for (auto player : players) {
-    printConnectionInfo(player);
-  }
+  buildPlayerRing();
 }
 
 /**
@@ -121,13 +119,34 @@ void RingMaster::startGame(size_t num_players) {
  * of ring
  **/
 void RingMaster::buildPlayerRing() {
+  for (size_t i = 0; i < players.size(); i++) {
+    playerInfo player = players[i];
+    playerRequest info;
+    Network::recvResponse(
+        player.playerConnectInfo.connectionSocketfd, &info, sizeof(info));
+    // unpack receive message
+    masterToPlayerInfo playerNeighborMsg;
+    memset(&playerNeighborMsg, 0, sizeof(playerNeighborMsg));
+    strncpy(playerNeighborMsg.ip,
+            Network::getConnectionIp(player.playerConnectInfo).first.c_str(),
+            sizeof(playerNeighborMsg.ip));
+    playerNeighborMsg.port = info.port;
+    // send back neighbor message
+    playerInfo neighbor = players[(i + 1) % players.size()];
+    Network::sendRequest(neighbor.playerConnectInfo.connectionSocketfd,
+                         &playerNeighborMsg,
+                         sizeof(playerNeighborMsg));
+  }
 }
 
-/*
-int RingMaster::unpackData(ConnectionInfo & info) {
-  return 0;
+/** 
+ * Debug function for ringmaster to check information recveive from player
+ **/
+void RingMaster::printRingMasterRecvInfo(masterToPlayerInfo & playerNeighborMsg,
+                                         playerInfo & player) {
+  std::cout << "player id: " << player.id << " with ip: " << playerNeighborMsg.ip
+            << " with port: " << playerNeighborMsg.port << std::endl;
 }
-*/
 
 void RingMaster::shutDownGame() {
   // close all the socket with client

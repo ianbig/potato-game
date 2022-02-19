@@ -19,8 +19,14 @@ struct ConnectionInfo {
   struct sockaddr_storage client_addr;
 };
 
+struct masterToPlayerInfo {
+  char ip[INET_ADDRSTRLEN];
+  size_t port;
+};
+
 typedef struct ConnectionInfo ConnectionInfo;
 typedef std::pair<std::string, size_t> PortIP;
+typedef struct masterToPlayerInfo masterToPlayerInfo;
 
 class Network {
  public:

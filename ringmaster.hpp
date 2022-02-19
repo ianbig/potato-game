@@ -30,6 +30,8 @@ class RingMaster {
   void acceptRequest(playerInfo * resp);
   void printConnectionInfo(playerInfo & info);
   void buildPlayerRing();
+  void printRingMasterRecvInfo(masterToPlayerInfo & playerNeighborMsg,
+                               playerInfo & player);
 
  public:
   // TODO: finish rule of five
