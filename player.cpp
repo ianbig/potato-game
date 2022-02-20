@@ -1,5 +1,7 @@
 #include "player.hpp"
 
+#include <poll.h>
+
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -26,10 +28,13 @@ std::unordered_map<std::string, std::string> getOpt(int argc,
   return parsedOpt;
 }
 
-Player::Player() : tunnelCount(3), client_connect(new Network[tunnelCount]) {
+Player::Player() :
+    tunnelCount(3),
+    client_connect(new Network[tunnelCount]),
+    pollArr(new struct pollfd[tunnelCount]) {
 }
 
-void Player::startConnection(std::string hostname, std::string port) {
+int Player::startConnection(std::string hostname, std::string port) {
   client_connect[RINGMASTER_TUNNEL].connectSetup(hostname.c_str(), std::stoi(port));
 
   if (connect(client_connect[RINGMASTER_TUNNEL].socket_fd,
@@ -56,6 +61,16 @@ void Player::startConnection(std::string hostname, std::string port) {
   Network::recvResponse(
       client_connect[RINGMASTER_TUNNEL].socket_fd, &neighborInfo, sizeof(neighborInfo));
   setupConnectionToNeighbor(neighborInfo);
+  setupIOMUX();
+
+  return 0;
+}
+
+void Player::setupIOMUX() {
+  for (size_t i = 0; i < tunnelCount; i++) {
+    pollArr[i].fd = client_connect[i].socket_fd;
+    pollArr[i].events = POLLIN;
+  }
 }
 
 void Player::setupConnectionToNeighbor(masterToPlayerInfo & neighborInfo) {
@@ -99,6 +114,30 @@ void Player::setupListenPort() {
 
 Player::~Player() {
   delete[] client_connect;
+  delete[] pollArr;
+}
+
+void Player::playGame() {
+  while (1) {
+    poll(pollArr, tunnelCount, -1);
+    for (size_t i = 0; i < tunnelCount; i++) {
+      if (pollArr[i].revents & POLLIN) {
+        int count = 0;
+        Network::recvResponse(pollArr[i].fd, &count, sizeof(count));
+        // end of game send back to notify ringmaster
+        if (count == 0) {
+          Network::sendRequest(
+              client_connect[RINGMASTER_TUNNEL].socket_fd, &count, sizeof(count));
+        }
+        // send to next player
+        srand((unsigned int)time(NULL));
+        count -= 1;
+        size_t sendTo = (rand() % 2) + 1;  // left and right neighbor
+        std::cout << "count is " << count << std::endl;
+        Network::sendRequest(client_connect[sendTo].socket_fd, &count, sizeof(count));
+      }
+    }
+  }
 }
 
 int main(int argc, char ** argv) {
@@ -108,5 +147,9 @@ int main(int argc, char ** argv) {
   Player p;
   p.setupListenPort();
 
-  p.startConnection(parsed["machine_name"], parsed["port_name"]);
+  int status = p.startConnection(parsed["machine_name"], parsed["port_name"]);
+  if (status != 0) {
+    std::cerr << "Error in Connecting the Game" << std::endl;
+  }
+  p.playGame();
 }

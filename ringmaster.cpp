@@ -107,6 +107,7 @@ void RingMaster::startGame(size_t num_players) {
   while (players.size() < num_players) {
     playerInfo info;
     acceptRequest(&info);
+    printConnectionInfo(info);
     players.push_back(info);
   }
 
@@ -129,13 +130,21 @@ void RingMaster::buildPlayerRing() {
     memset(&playerNeighborMsg, 0, sizeof(playerNeighborMsg));
     strncpy(playerNeighborMsg.ip,
             Network::getConnectionIp(player.playerConnectInfo).first.c_str(),
-            sizeof(playerNeighborMsg.ip));
+            sizeof(playerNeighborMsg
+                       .ip));  // the real ip could only get from information after accept
     playerNeighborMsg.port = info.port;
+    printRingMasterRecvInfo(playerNeighborMsg, player);
     // send back neighbor message
     playerInfo neighbor = players[(i + 1) % players.size()];
     Network::sendRequest(neighbor.playerConnectInfo.connectionSocketfd,
                          &playerNeighborMsg,
                          sizeof(playerNeighborMsg));
+  }
+
+  int count = 3;
+  Network::sendRequest(
+      players[0].playerConnectInfo.connectionSocketfd, &count, sizeof(count));
+  while (1) {
   }
 }
 

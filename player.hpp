@@ -25,14 +25,17 @@ typedef struct playerRequest playerRequest;
 class Player {
   size_t tunnelCount;
   Network * client_connect;
+  struct pollfd * pollArr;
   void setupConnectionToNeighbor(masterToPlayerInfo & neighborInfo);
+  void setupIOMUX();
 
  public:
   Player();
   ~Player();
   // TODO: finish rule of five
-  void startConnection(std::string hostname, std::string port);
+  int startConnection(std::string hostname, std::string port);
   void setupListenPort();
+  void playGame();
 };
 
 #endif
