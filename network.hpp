@@ -20,6 +20,7 @@ struct ConnectionInfo {
 };
 
 struct masterToPlayerInfo {
+  size_t id;
   char ip[INET_ADDRSTRLEN];
   size_t port;
 };

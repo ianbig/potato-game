@@ -2,6 +2,7 @@
 
 #include <poll.h>
 
+#include <cassert>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -29,6 +30,7 @@ std::unordered_map<std::string, std::string> getOpt(int argc,
 }
 
 Player::Player() :
+    id(0),
     tunnelCount(3),
     client_connect(new Network[tunnelCount]),
     pollArr(new struct pollfd[tunnelCount]) {
@@ -68,7 +70,23 @@ int Player::startConnection(std::string hostname, std::string port) {
 
 void Player::setupIOMUX() {
   for (size_t i = 0; i < tunnelCount; i++) {
-    pollArr[i].fd = client_connect[i].socket_fd;
+    if (i != LISTEN_TUNNEL) {
+      pollArr[i].fd = client_connect[i].socket_fd;
+    }
+
+    else {
+      int acceptfd = -1;
+      socklen_t size = sizeof(client_connect[i].serviceinfo);
+      if ((acceptfd = accept(client_connect[i].socket_fd,
+                             (struct sockaddr *)&(client_connect[i].serviceinfo),
+                             &size)) == -1) {
+        perror("accept");
+        throw std::exception();
+      }
+
+      pollArr[i].fd = acceptfd;
+    }
+
     pollArr[i].events = POLLIN;
   }
 }
@@ -114,6 +132,7 @@ void Player::setupListenPort() {
 
 Player::~Player() {
   delete[] client_connect;
+  close(pollArr[LISTEN_TUNNEL].fd);
   delete[] pollArr;
 }
 
@@ -125,19 +144,30 @@ void Player::playGame() {
         int count = 0;
         Network::recvResponse(pollArr[i].fd, &count, sizeof(count));
         // end of game send back to notify ringmaster
-        if (count == 0) {
-          Network::sendRequest(
-              client_connect[RINGMASTER_TUNNEL].socket_fd, &count, sizeof(count));
-        }
+        checkResult(count);
         // send to next player
-        srand((unsigned int)time(NULL));
+        int sendTo = generateNextPass();
         count -= 1;
-        size_t sendTo = (rand() % 2) + 1;  // left and right neighbor
         std::cout << "count is " << count << std::endl;
         Network::sendRequest(client_connect[sendTo].socket_fd, &count, sizeof(count));
       }
     }
   }
+}
+
+void Player::checkResult(int & count) {
+  if (count == 0) {
+    Network::sendRequest(
+        client_connect[RINGMASTER_TUNNEL].socket_fd, &count, sizeof(count));
+    exit(EXIT_FAILURE);
+  }
+}
+
+int Player::generateNextPass() {
+  srand((unsigned int)time(NULL));
+  size_t sendTo = (rand() % 2) + 1;  // left and right neighbor
+  assert(sendTo == 1 || sendTo == 2);
+  return sendTo;
 }
 
 int main(int argc, char ** argv) {
