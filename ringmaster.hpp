@@ -9,6 +9,7 @@
 
 #include "network.hpp"
 #include "player.hpp"
+#include "poll.h"
 #include "potato.hpp"
 
 #define BACKLOG 10
@@ -25,6 +26,8 @@ class RingMaster {
   std::vector<playerInfo> players;
   Network * connectInfo;
 
+  struct pollfd * pollArr;
+
   static int playerId;
 
   void acceptRequest(playerInfo * resp);
@@ -32,6 +35,7 @@ class RingMaster {
   void buildPlayerRing();
   void printRingMasterRecvInfo(masterToPlayerInfo & playerNeighborMsg,
                                playerInfo & player);
+  void setupIoMux();
 
  public:
   // TODO: finish rule of five

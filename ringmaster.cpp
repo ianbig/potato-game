@@ -111,10 +111,29 @@ void RingMaster::startGame(size_t num_players) {
   }
 
   buildPlayerRing();
+  setupIoMux();
+  // send out information to random player
   int count = 3;
   Network::sendRequest(
       players[0].playerConnectInfo.connectionSocketfd, &count, sizeof(count));
-  while (1) {
+
+  poll(pollArr, players.size(), -1);
+  for (size_t i = 0; i < players.size(); i++) {
+    if (pollArr[i].revents & POLLIN) {
+      char msg[1024] = {0};
+      Network::recvResponse(pollArr[i].fd, msg, 1024);
+      std::cout << msg << std::endl;
+      shutDownGame();
+      return;
+    }
+  }
+}
+
+void RingMaster::setupIoMux() {
+  pollArr = new struct pollfd[players.size()];
+  for (size_t i = 0; i < players.size(); i++) {
+    pollArr[i].fd = players[i].playerConnectInfo.connectionSocketfd;
+    pollArr[i].events = POLLIN;
   }
 }
 
@@ -157,6 +176,9 @@ void RingMaster::printRingMasterRecvInfo(masterToPlayerInfo & playerNeighborMsg,
 
 void RingMaster::shutDownGame() {
   // close all the socket with client
+  delete[] pollArr;
+  std::cout << "shuting game" << std::endl;
+  freeaddrinfo(connectInfo->serviceinfo);
 }
 
 RingMaster::~RingMaster() {
@@ -169,6 +191,10 @@ RingMaster::RingMaster() : connectInfo(new Network()) {
 int main(int argc, char ** argv) {
   std::vector<std::string> opts = {"port", "num_players", "num_hops"};
   std::unordered_map<std::string, int> parsedOpt = parseOpt(argc, argv, opts);
+
+  if (parsedOpt["num_players"] == 0) {
+    return EXIT_SUCCESS;
+  }
 
   for (auto iter = parsedOpt.begin(); iter != parsedOpt.end(); iter++) {
     std::cout << iter->first << ": " << iter->second << std::endl;

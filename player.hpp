@@ -29,8 +29,9 @@ class Player {
   struct pollfd * pollArr;
   void setupConnectionToNeighbor(masterToPlayerInfo & neighborInfo);
   void setupIOMUX();
-  void checkResult(int & count);
+  int checkResult(int & count);
   int generateNextPass();
+  void printPort();
 
  public:
   Player();

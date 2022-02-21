@@ -46,6 +46,8 @@ int Player::startConnection(std::string hostname, std::string port) {
     throw std::exception();
   }
 
+  freeaddrinfo(client_connect[RINGMASTER_TUNNEL].serviceinfo);
+
   // pack connection info for ringmaster to assign neighbor
   PortIP ip_port = client_connect[LISTEN_TUNNEL].getIpPort(
       client_connect[LISTEN_TUNNEL].serviceinfo->ai_addr);
@@ -68,25 +70,17 @@ int Player::startConnection(std::string hostname, std::string port) {
   return 0;
 }
 
+void Player::printPort() {
+  std::cerr << "listen: " << client_connect[LISTEN_TUNNEL].socket_fd
+            << " connect: " << client_connect[CONNECT_TUNNEL].socket_fd
+            << " ringmaster: " << client_connect[RINGMASTER_TUNNEL].socket_fd
+            << std::endl;
+}
+
 void Player::setupIOMUX() {
+  memset(pollArr, 0, sizeof(*pollArr) * tunnelCount);
   for (size_t i = 0; i < tunnelCount; i++) {
-    if (i != LISTEN_TUNNEL) {
-      pollArr[i].fd = client_connect[i].socket_fd;
-    }
-
-    else {
-      int acceptfd = -1;
-      socklen_t size = sizeof(client_connect[i].serviceinfo);
-      if ((acceptfd = accept(client_connect[i].socket_fd,
-                             (struct sockaddr *)&(client_connect[i].serviceinfo),
-                             &size)) == -1) {
-        perror("accept");
-        throw std::exception();
-      }
-
-      pollArr[i].fd = acceptfd;
-    }
-
+    pollArr[i].fd = client_connect[i].socket_fd;
     pollArr[i].events = POLLIN;
   }
 }
@@ -98,6 +92,18 @@ void Player::setupConnectionToNeighbor(masterToPlayerInfo & neighborInfo) {
               client_connect[CONNECT_TUNNEL].serviceinfo->ai_addr,
               client_connect[CONNECT_TUNNEL].serviceinfo->ai_addrlen) == -1) {
     perror("connect");
+    throw std::exception();
+  }
+
+  freeaddrinfo(client_connect[CONNECT_TUNNEL].serviceinfo);
+
+  freeaddrinfo(client_connect[LISTEN_TUNNEL].serviceinfo);
+  socklen_t size = sizeof(client_connect[LISTEN_TUNNEL].serviceinfo);
+  if ((client_connect[LISTEN_TUNNEL].socket_fd =
+           accept(client_connect[LISTEN_TUNNEL].socket_fd,
+                  (struct sockaddr *)&(client_connect[LISTEN_TUNNEL].serviceinfo),
+                  &size)) == -1) {
+    perror("accept");
     throw std::exception();
   }
 }
@@ -144,7 +150,9 @@ void Player::playGame() {
         int count = 0;
         Network::recvResponse(pollArr[i].fd, &count, sizeof(count));
         // end of game send back to notify ringmaster
-        checkResult(count);
+        if (checkResult(count) == -1) {
+          return;
+        }
         // send to next player
         int sendTo = generateNextPass();
         count -= 1;
@@ -155,12 +163,19 @@ void Player::playGame() {
   }
 }
 
-void Player::checkResult(int & count) {
-  if (count == 0) {
+/**
+ * Check whether the hops reach zero if reach zero push the message back to ring master server
+ * @ return -1: means the hops reach zero, need to pass to ringmaster, 0 means the game still running
+ **/
+int Player::checkResult(int & count) {
+  if (count <= 0) {
+    std::string msg = "player " + std::to_string(id) + "is reporting the end of game";
     Network::sendRequest(
-        client_connect[RINGMASTER_TUNNEL].socket_fd, &count, sizeof(count));
-    exit(EXIT_FAILURE);
+        client_connect[RINGMASTER_TUNNEL].socket_fd, msg.c_str(), msg.size());
+    return -1;
   }
+
+  return 0;
 }
 
 int Player::generateNextPass() {

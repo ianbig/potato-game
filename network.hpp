@@ -41,7 +41,7 @@ class Network {
   ~Network();
   void connectSetup(const char * hostname, int port_num);
   std::pair<std::string, size_t> getIpPort(struct sockaddr * serviceinfo);
-  static void sendRequest(int connectSocket, void * msg, size_t msg_len);
+  static void sendRequest(int connectSocket, const void * msg, size_t msg_len);
   static void recvResponse(int recvSocket, void * buffer, size_t buffer_len);
   static PortIP getConnectionIp(ConnectionInfo & info);
 };

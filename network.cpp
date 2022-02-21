@@ -1,13 +1,17 @@
 #include "network.hpp"
 
 #include <arpa/inet.h>
+
+#include <iostream>
 void Network::connectSetup(const char * hostname, int port_num) {
   struct addrinfo hints;
 
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
+  if (hostname == NULL) {
+    hints.ai_flags = AI_PASSIVE;
+  }
 
   int status = 0;
   if ((status = getaddrinfo(
@@ -34,7 +38,7 @@ void Network::connectSetup(const char * hostname, int port_num) {
  * @param buffer_len: memory space size for receiving data
  * @throw: std::exception is recv failed
  **/
-void Network::sendRequest(int connectSocket, void * msg, size_t msg_len) {
+void Network::sendRequest(int connectSocket, const void * msg, size_t msg_len) {
   if (send(connectSocket, msg, msg_len, 0) == -1) {
     perror("send");
     throw std::exception();
@@ -57,8 +61,6 @@ void Network::recvResponse(int recvSocket, void * buffer, size_t buffer_len) {
 }
 
 Network::~Network() {
-  freeaddrinfo(serviceinfo);
-
   if (close(socket_fd) == -1) {
     // TODO: throw exception
     perror("close");
