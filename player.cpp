@@ -46,6 +46,13 @@ int Player::startConnection(std::string hostname, std::string port) {
     throw std::exception();
   }
 
+  playerInfo playerAssignedInfo;
+  Network::recvResponse(client_connect[RINGMASTER_TUNNEL].socket_fd,
+                        &playerAssignedInfo,
+                        sizeof(playerAssignedInfo));
+
+  this->id = playerAssignedInfo.id;
+
   freeaddrinfo(client_connect[RINGMASTER_TUNNEL].serviceinfo);
 
   // pack connection info for ringmaster to assign neighbor
@@ -56,6 +63,8 @@ int Player::startConnection(std::string hostname, std::string port) {
   memset(&request, 0, sizeof(request));
   request.port = ip_port.second;
 
+  // std::cout << "send out port: " << request.port << std::endl;
+
   Network::sendRequest(
       client_connect[RINGMASTER_TUNNEL].socket_fd, &request, sizeof(request));
 
@@ -63,8 +72,12 @@ int Player::startConnection(std::string hostname, std::string port) {
   memset(&neighborInfo, 0, sizeof(neighborInfo));
   Network::recvResponse(
       client_connect[RINGMASTER_TUNNEL].socket_fd, &neighborInfo, sizeof(neighborInfo));
+  size_t total_player = neighborInfo.total_player;
   setupConnectionToNeighbor(neighborInfo);
   setupIOMUX();
+
+  std::cout << "Connected as player " << this->id << " out of " << total_player
+            << " total players" << std::endl;
 
   return 0;
 }
@@ -155,7 +168,8 @@ void Player::playGame() {
         // send to next player
         int sendTo = generateNextPass();
         count -= 1;
-        std::cout << "count is " << count << " index sendTo: " << sendTo << std::endl;
+        std::cout << "count is " << count << " index sendTo: " << sendTo
+                  << "with socket fd: " << client_connect[sendTo].socket_fd << std::endl;
         Network::sendRequest(client_connect[sendTo].socket_fd, &count, sizeof(count));
       }
     }
@@ -178,6 +192,7 @@ int Player::checkResult(int & count) {
 }
 
 int Player::generateNextPass() {
+  sleep(1);
   srand((unsigned int)time(NULL) + id);
   size_t sendTo = (rand() % 2) + 1;  // left and right neighbor
   assert(sendTo == 1 || sendTo == 2);

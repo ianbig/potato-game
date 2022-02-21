@@ -14,13 +14,6 @@
 
 #define BACKLOG 10
 
-struct playerInfo {
-  int id;
-  ConnectionInfo playerConnectInfo;
-};
-
-typedef struct playerInfo playerInfo;
-
 class RingMaster {
   Potato potato;
   std::vector<playerInfo> players;

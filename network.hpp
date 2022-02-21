@@ -20,11 +20,17 @@ struct ConnectionInfo {
 };
 
 struct masterToPlayerInfo {
-  size_t id;
+  size_t total_player;
   char ip[INET_ADDRSTRLEN];
   size_t port;
 };
 
+struct playerInfo {
+  int id;
+  ConnectionInfo playerConnectInfo;
+};
+
+typedef struct playerInfo playerInfo;
 typedef struct ConnectionInfo ConnectionInfo;
 typedef std::pair<std::string, size_t> PortIP;
 typedef struct masterToPlayerInfo masterToPlayerInfo;

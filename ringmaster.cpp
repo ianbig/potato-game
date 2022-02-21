@@ -87,6 +87,7 @@ void RingMaster::acceptRequest(playerInfo * resp) {
   }
 
   resp->id = playerId++;
+  Network::sendRequest(resp->playerConnectInfo.connectionSocketfd, resp, sizeof(*resp));
 }
 
 /**
@@ -167,6 +168,7 @@ void RingMaster::buildPlayerRing() {
             sizeof(playerNeighborMsg
                        .ip));  // the real ip could only get from information after accept
     playerNeighborMsg.port = info.port;
+    playerNeighborMsg.total_player = players.size();
 
     // send back neighbor message
     playerInfo neighbor = players[(i + 1) % players.size()];
