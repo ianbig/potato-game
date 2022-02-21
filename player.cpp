@@ -56,7 +56,6 @@ int Player::startConnection(std::string hostname, std::string port) {
   memset(&request, 0, sizeof(request));
   request.port = ip_port.second;
 
-  std::cout << "player send out port: " << request.port << std::endl;
   Network::sendRequest(
       client_connect[RINGMASTER_TUNNEL].socket_fd, &request, sizeof(request));
 
@@ -156,7 +155,7 @@ void Player::playGame() {
         // send to next player
         int sendTo = generateNextPass();
         count -= 1;
-        std::cout << "count is " << count << std::endl;
+        std::cout << "count is " << count << " index sendTo: " << sendTo << std::endl;
         Network::sendRequest(client_connect[sendTo].socket_fd, &count, sizeof(count));
       }
     }
@@ -179,7 +178,7 @@ int Player::checkResult(int & count) {
 }
 
 int Player::generateNextPass() {
-  srand((unsigned int)time(NULL));
+  srand((unsigned int)time(NULL) + id);
   size_t sendTo = (rand() % 2) + 1;  // left and right neighbor
   assert(sendTo == 1 || sendTo == 2);
   return sendTo;

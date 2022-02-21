@@ -36,6 +36,8 @@ class RingMaster {
   void printRingMasterRecvInfo(masterToPlayerInfo & playerNeighborMsg,
                                playerInfo & player);
   void setupIoMux();
+  void sendToRandomPlayer();
+  void listenforIT();
 
  public:
   // TODO: finish rule of five

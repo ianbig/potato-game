@@ -1,4 +1,12 @@
 #ifndef POTATO_HPP
 #define POTATO_HPP
-class Potato {};
+
+#include <vector>
+
+class Potato {
+  std::vector<int> trace;
+
+ public:
+  void appendHistory(std::vector<int> & trace);
+};
 #endif
