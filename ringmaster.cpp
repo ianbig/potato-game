@@ -87,6 +87,7 @@ void RingMaster::acceptRequest(playerInfo * resp) {
   }
 
   resp->id = playerId++;
+  // memset(resp, 0, sizeof(*resp));
   Network::sendRequest(resp->playerConnectInfo.connectionSocketfd, resp, sizeof(*resp));
 }
 
@@ -104,7 +105,7 @@ void RingMaster::printConnectionInfo(playerInfo & info) {
  * the function would set up the game (i.e. building the ring)
  * @ param num_players: players in the game
  **/
-void RingMaster::startGame(size_t num_players) {
+void RingMaster::startGame(size_t num_players, size_t nhops) {
   while (players.size() < num_players) {
     playerInfo info;
     acceptRequest(&info);
@@ -115,7 +116,7 @@ void RingMaster::startGame(size_t num_players) {
   buildPlayerRing();
   setupIoMux();
   // send out information to random player
-  sendToRandomPlayer();
+  sendToRandomPlayer(nhops);
   listenforIT();
 }
 
@@ -123,22 +124,25 @@ void RingMaster::listenforIT() {
   poll(pollArr, players.size(), -1);
   for (size_t i = 0; i < players.size(); i++) {
     if (pollArr[i].revents & POLLIN) {
-      char msg[1024] = {0};
-      Network::recvResponse(pollArr[i].fd, msg, 1024);
-      shutDownGame();
+      Potato endPotato;
+      Network::recvResponse(pollArr[i].fd, &endPotato, sizeof(endPotato));
+      endPotato.printTrace();
+      shutDownGame(pollArr[i].fd);
       return;
     }
   }
 }
 
-void RingMaster::sendToRandomPlayer() {
+void RingMaster::sendToRandomPlayer(int nhops) {
   srand((unsigned int)time(NULL) + playerId);
   int startPlayer = rand() % players.size();
   std::cout << "Ready to start the game, sending potato to player " << startPlayer
             << std::endl;
-  int count = 10;
-  Network::sendRequest(
-      players[startPlayer].playerConnectInfo.connectionSocketfd, &count, sizeof(count));
+  Potato initPotato(nhops);
+  initPotato.nhops -= 1;
+  Network::sendRequest(players[startPlayer].playerConnectInfo.connectionSocketfd,
+                       &initPotato,
+                       sizeof(initPotato));
 }
 
 void RingMaster::setupIoMux() {
@@ -222,5 +226,5 @@ int main(int argc, char ** argv) {
   RingMaster rm;
 
   rm.setupServer(parsedOpt["port"]);
-  rm.startGame(parsedOpt["num_players"]);
+  rm.startGame(parsedOpt["num_players"], parsedOpt["num_hops"]);
 }

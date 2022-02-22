@@ -29,7 +29,7 @@ class RingMaster {
   void printRingMasterRecvInfo(masterToPlayerInfo & playerNeighborMsg,
                                playerInfo & player);
   void setupIoMux();
-  void sendToRandomPlayer();
+  void sendToRandomPlayer(int nhops);
   void listenforIT();
 
  public:
@@ -37,7 +37,7 @@ class RingMaster {
   RingMaster();
   ~RingMaster();
   void setupServer(int port_num);
-  void startGame(size_t num_players);
+  void startGame(size_t num_players, size_t nhops);
   void shutDownGame();
 };
 

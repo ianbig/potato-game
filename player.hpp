@@ -24,20 +24,20 @@ struct playerRequest {
 typedef struct playerRequest playerRequest;
 
 class Player {
-  size_t id;  // TODO: assign id
+  size_t id;
   size_t tunnelCount;
   Network * client_connect;
   struct pollfd * pollArr;
+  size_t total_player;
   void setupConnectionToNeighbor(masterToPlayerInfo & neighborInfo);
   void setupIOMUX();
-  int checkResult(int & count);
+  int checkResult(Potato & potato);
   int generateNextPass();
   void printPort();
 
  public:
   Player();
   ~Player();
-  // TODO: finish rule of five
   int startConnection(std::string hostname, std::string port);
   void setupListenPort();
   void playGame();
