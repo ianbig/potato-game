@@ -4,9 +4,16 @@
 #include <vector>
 
 class Potato {
-  std::vector<int> trace;
+  int trace[512];
+  size_t currentIndex;
 
  public:
-  void appendHistory(std::vector<int> & trace);
+  int nhops;
+  Potato() {}
+  Potato(int nhops_t);
+  Potato(const Potato & rhs);
+  Potato & operator=(const Potato & rhs);
+  void appendHistory(size_t id);
+  void printTrace();
 };
 #endif

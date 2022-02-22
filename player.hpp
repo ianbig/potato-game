@@ -10,6 +10,7 @@
 #define MAX_RECV_DATA 1024
 #define MAX_SEND_DATA 1024
 #include "network.hpp"
+#include "potato.hpp"
 
 #define RINGMASTER_TUNNEL 0
 #define LISTEN_TUNNEL 1
