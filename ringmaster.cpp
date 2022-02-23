@@ -116,6 +116,10 @@ void RingMaster::startGame(size_t num_players, size_t nhops) {
   buildPlayerRing();
   setupIoMux();
   // send out information to random player
+  if (nhops == 0) {
+    shutDownGame();
+    return;
+  }
   sendToRandomPlayer(nhops);
   listenforIT();
 }
@@ -225,7 +229,7 @@ int main(int argc, char ** argv) {
 
   printPrompt(parsedOpt["num_players"], parsedOpt["num_hops"]);
 
-  if (parsedOpt["num_players"] == 0 || parsedOpt["num_hops"] == 0) {
+  if (parsedOpt["num_players"] == 0) {
     return EXIT_SUCCESS;
   }
 
