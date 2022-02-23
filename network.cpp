@@ -58,6 +58,10 @@ void Network::recvResponse(int recvSocket, void * buffer, size_t buffer_len) {
     perror("recv");
     throw std::exception();
   }
+
+  if (numbytes <= 0) {
+    throw std::exception();
+  }
 }
 
 Network::~Network() {

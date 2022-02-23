@@ -169,17 +169,17 @@ void Player::playGame() {
         }
 
         recvPotato.nhops -= 1;
-        recvPotato.appendHistory(id);
+        recvPotato.appendHistory(this->id);
         // send to next player
         int sendTo = generateNextPass();
+        // int sendTo = LISTEN_TUNNEL;
         if (status == -1) {
           sendTo = RINGMASTER_TUNNEL;
         }
 
-        size_t sendId = (sendTo == LISTEN_TUNNEL)
+        size_t sendId = (sendTo == CONNECT_TUNNEL)
                             ? ((id == 0) ? total_player - 1 : id - 1)
                             : ((id + 1) % total_player);
-        sendId = (total_player == 1) ? 0 : sendId;
 
         if (sendTo != RINGMASTER_TUNNEL) {
           std::cout << "Sending potato to " << sendId << std::endl;
