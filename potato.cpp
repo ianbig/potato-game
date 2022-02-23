@@ -16,7 +16,7 @@ void Potato::appendHistory(size_t id) {
 }
 
 void Potato::printTrace() {
-  std::cout << "Trace of potato" << std::endl;
+  std::cout << "Trace of potato:" << std::endl;
   for (size_t i = 0; i < currentIndex - 1; i++) {
     std::cout << trace[i] << ",";
   }

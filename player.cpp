@@ -178,7 +178,7 @@ void Player::playGame() {
 
         size_t sendId = (sendTo == LISTEN_TUNNEL)
                             ? ((id == 0) ? total_player - 1 : id - 1)
-                            : (id + 1);
+                            : ((id + 1) % total_player);
         sendId = (total_player == 1) ? 0 : sendId;
 
         if (sendTo != RINGMASTER_TUNNEL) {
