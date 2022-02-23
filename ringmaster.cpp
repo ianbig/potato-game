@@ -229,7 +229,7 @@ int main(int argc, char ** argv) {
 
   printPrompt(parsedOpt["num_players"], parsedOpt["num_hops"]);
 
-  if (parsedOpt["num_players"] == 0) {
+  if (parsedOpt["num_players"] == 0 || parsedOpt["num_players"] == 1) {
     return EXIT_SUCCESS;
   }
 
