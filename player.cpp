@@ -161,18 +161,30 @@ void Player::playGame() {
       if (pollArr[i].revents & POLLIN) {
         Potato recvPotato;
         Network::recvResponse(pollArr[i].fd, &recvPotato, sizeof(recvPotato));
+
         // end of game send back to notify ringmaster
-        if (checkResult(recvPotato) == -1) {
+        int status = 0;
+        if ((status = checkResult(recvPotato)) == -2) {
           return;
         }
-        // send to next player
-        int sendTo = generateNextPass();
+
         recvPotato.nhops -= 1;
         recvPotato.appendHistory(id);
+        // send to next player
+        int sendTo = generateNextPass();
+        if (status == -1) {
+          sendTo = RINGMASTER_TUNNEL;
+        }
+
         size_t sendId = (sendTo == LISTEN_TUNNEL)
                             ? ((id == 0) ? total_player - 1 : id - 1)
                             : (id + 1);
-        std::cout << "Sending potato to " << sendId << std::endl;
+        sendId = (total_player == 1) ? 0 : sendId;
+
+        if (sendTo != RINGMASTER_TUNNEL) {
+          std::cout << "Sending potato to " << sendId << std::endl;
+        }
+
         Network::sendRequest(
             client_connect[sendTo].socket_fd, &recvPotato, sizeof(recvPotato));
       }
@@ -185,15 +197,13 @@ void Player::playGame() {
  * @ return -1: means the hops reach zero, need to pass to ringmaster, 0 means the game still running
  **/
 int Player::checkResult(Potato & potato) {
-  if (potato.nhops == 0) {
-    Network::sendRequest(
-        client_connect[RINGMASTER_TUNNEL].socket_fd, &potato, sizeof(potato));
+  if (potato.nhops == 1) {
     std::cout << "I'm it" << std::endl;
     return -1;
   }
 
-  else if (potato.nhops < 0) {
-    return -1;
+  else if (potato.nhops < 1) {
+    return -2;
   }
 
   return 0;

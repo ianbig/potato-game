@@ -127,7 +127,7 @@ void RingMaster::listenforIT() {
       Potato endPotato;
       Network::recvResponse(pollArr[i].fd, &endPotato, sizeof(endPotato));
       endPotato.printTrace();
-      shutDownGame(pollArr[i].fd);
+      shutDownGame();
       return;
     }
   }
@@ -139,7 +139,6 @@ void RingMaster::sendToRandomPlayer(int nhops) {
   std::cout << "Ready to start the game, sending potato to player " << startPlayer
             << std::endl;
   Potato initPotato(nhops);
-  initPotato.nhops -= 1;
   Network::sendRequest(players[startPlayer].playerConnectInfo.connectionSocketfd,
                        &initPotato,
                        sizeof(initPotato));
@@ -196,6 +195,13 @@ void RingMaster::printRingMasterRecvInfo(masterToPlayerInfo & playerNeighborMsg,
  **/
 void RingMaster::shutDownGame() {
   // close all the socket with client
+  Potato endPotato;
+  endPotato.nhops = -1;
+  for (size_t i = 0; i < players.size(); i++) {
+    Network::sendRequest(
+        players[i].playerConnectInfo.connectionSocketfd, &endPotato, sizeof(endPotato));
+  }
+
   delete[] pollArr;
   freeaddrinfo(connectInfo->serviceinfo);
 }
